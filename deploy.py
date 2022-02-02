@@ -20,14 +20,16 @@ config = yaml.safe_load(res)
 repo = {
     "full_name": events["repository"]["full_name"],
     "url": events["repository"]["clone_url"],
-    "commit": events["commits"][0]["id"],
+    "commit": events["commits"][0]["id"] if events["commits"] else None,
 }
 
 command = '''
 git clone --depth 1 {} vercel
 cd vercel
-git reset --hard {}
-'''.format(f"https://{token}@" + repo["url"].lstrip("http://").lstrip("https://"), repo["commit"])
+'''.format(f"https://{token}@" + repo["url"].lstrip("http://").lstrip("https://"))
+
+if repo["commit"]:
+    command += "\ngit reset --hard " + repo["commit"]
 
 subprocess.run(command, shell=True, check=True, capture_output=False)
 for cf in config["config"]:
